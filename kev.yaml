@@ -17,6 +17,10 @@ on:
         required: false
       SET_SEC_DEPLOY_API_KEY:
         required: false
+      secret_1:
+        required: false
+      secret_json:
+        required: false
 
 jobs:
   install:
