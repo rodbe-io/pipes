@@ -1,0 +1,55 @@
+name: Node.js CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      build_env:
+        description: "Environment for the build step"
+        required: false
+        type: string
+        default: "development"
+      extra_envs:
+        description: "Extra environment variables in JSON format"
+        required: false
+        type: string
+    secrets:
+      npm_token:
+        required: false
+      SET_SEC_DEPLOY_API_KEY:
+        required: false
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          registry-url: "https://registry.npmjs.org/"
+
+      - name: Install dependencies
+        run: npm i
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Parse extra environment variables
+        id: parse_envs
+        run: |
+          echo '${{ inputs.extra_envs }}' > env.json
+          cat env.json | jq -r 'to_entries | .[] | "echo \"\(.key)=\(.value)\" >> $GITHUB_ENV"' | bash
+
+      - name: Build application
+        run: npm run build
+        env:
+          SET_BUILD_ENV: ${{ inputs.build_env }}
+          SET_SEC_NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+          SET_SEC_DEPLOY_API_KEY: ${{ secrets.SET_SEC_DEPLOY_API_KEY }}
+
